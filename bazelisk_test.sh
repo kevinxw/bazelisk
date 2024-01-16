@@ -267,6 +267,21 @@ function test_bazel_last_downstream_green() {
       (echo "FAIL: 'bazelisk version' of an unreleased binary must not print a build label."; exit 1)
 }
 
+function test_BAZELISK_NOJDK() {
+  setup
+
+  set +e
+  BAZELISK_HOME="$BAZELISK_HOME" \
+      USE_BAZEL_VERSION="7.0.0" \
+      BAZELISK_NOJDK="1" \
+      JAVA_HOME="does/not/exist" \
+      bazelisk version 2>&1 | tee log
+  set -e
+
+  grep "FATAL: Could not find system javabase. Ensure JAVA_HOME is set, or javac is on your PATH." log || \
+      (echo "FAIL: nojdk Bazel should fail when no JDK is supplied."; exit 1)
+}
+
 function test_bazel_last_rc() {
   setup
 
@@ -489,6 +504,10 @@ echo
 
 echo "# test_bazel_last_downstream_green"
 test_bazel_last_downstream_green
+echo
+
+echo "# test_BAZELISK_NOJDK"
+test_BAZELISK_NOJDK
 echo
 
 if [[ $BAZELISK_VERSION == "GO" ]]; then
